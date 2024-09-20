@@ -6,30 +6,11 @@ import { UpdatePredictionDto } from './dto/update-prediction.dto';
 
 @Controller()
 export class PredictionController {
-  constructor(private readonly predictionService: PredictionService) {}
+  constructor(private readonly predictionService: PredictionService) { }
 
-  @MessagePattern('createPrediction')
+  @MessagePattern('generate.prediction')
   create(@Payload() createPredictionDto: CreatePredictionDto) {
     return this.predictionService.create(createPredictionDto);
   }
 
-  @MessagePattern('findAllPrediction')
-  findAll() {
-    return this.predictionService.findAll();
-  }
-
-  @MessagePattern('findOnePrediction')
-  findOne(@Payload() id: number) {
-    return this.predictionService.findOne(id);
-  }
-
-  @MessagePattern('updatePrediction')
-  update(@Payload() updatePredictionDto: UpdatePredictionDto) {
-    return this.predictionService.update(updatePredictionDto.id, updatePredictionDto);
-  }
-
-  @MessagePattern('removePrediction')
-  remove(@Payload() id: number) {
-    return this.predictionService.remove(id);
-  }
 }
