@@ -14,6 +14,8 @@ async function main() {
     }
   })
 
+  await app.listen();
+
   logger.log(`Prediction Microservice running on port ${envs.port}`)
 
 }
