@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
+import { PredictionModule } from './prediction/prediction.module';
 
 @Module({
-  imports: [],
+  imports: [PredictionModule],
   controllers: [],
   providers: [],
 })
