@@ -25,6 +25,10 @@ export class DataToAnalyze {
     @IsNumber()
     public usedTrend: string;
 
+    @IsNotEmpty()
+    @IsNumber()
+    daysSinceLastPurchase: number;
+
     @IsOptional()
     @IsNotEmpty()
     @IsNumber()
