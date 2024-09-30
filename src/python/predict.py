@@ -17,8 +17,6 @@ scaler_dias_y = joblib.load(os.path.join(current_dir, 'scaler_dias_compras_y.pkl
 scaler_cantidad_x = joblib.load(os.path.join(current_dir, 'scaler_cantidad_compras_x.pkl'))
 scaler_cantidad_y = joblib.load(os.path.join(current_dir, 'scaler_cantidad_compras_y.pkl'))
 
-# Modelos para predicción de días y cantidad
-
 # Datos de entrada
 materialID = sys.argv[1]
 totalQuantityUsed = float(sys.argv[2])
@@ -28,27 +26,13 @@ avgDailyUsed = float(sys.argv[4])
 usedTrend = sys.argv[7]
 avgTimeBetweenPurchases = float(sys.argv[5])
 daysSinceLastPurchase = float(sys.argv[8])
+purchaseInEvent = float(sys.argv[9])
+usageInEvent = float(sys.argv[10])
 
 # Transformar los datos para el modelo
 # Usar el LabelEncoder para materialID y usedTrend
 materialID_encoded = label_encoder_material.transform([materialID])[0]
 usedTrend_encoded = label_encoder_trend.transform([usedTrend])[0]
-
-# Preparar los datos para el modelo (asegúrate que el orden es el correcto)
-purchaseInEvent = 0
-usageInEvent = 120
-# data = [[
-#     materialID_encoded,
-#     avgDailyUsed,
-#     avgTimeBetweenPurchases,
-#     usedTrend_encoded,
-#     daysSinceLastPurchase,
-#     # totalQuantityPurchased,
-#     # totalQuantityUsed,
-#     purchaseInEvent,
-# usageInEvent,
-#     # lastPurchasedDate,  # Asegúrate que el formato sea correcto si es una fecha
-# ]]
 
 # Crear un DataFrame con los nombres de las columnas esperadas por el StandardScaler
 columns = [
@@ -68,15 +52,12 @@ new_data_df = pd.DataFrame([[
     avgTimeBetweenPurchases,
     usedTrend_encoded,
     daysSinceLastPurchase,
-    # totalQuantityPurchased,
-    # totalQuantityUsed,
     purchaseInEvent,
     usageInEvent,
 ]], columns=columns)
 
 # Seleccionar las características para la predicción
 features_dias = ['materialID_encoded', 'usageInEvent', 'purchaseInEvent', 'avgDailyUsed', 'avgTimeBetweenPurchases', 'daysSinceLastPurchase', 'usedTrend_encoded']
-    
 features_cantidad = features_dias  # Usaremos las mismas características para ambos modelos
     
 # 2. Escalar los datos para los modelos de días
@@ -99,20 +80,8 @@ y_pred_cantidad = scaler_cantidad_y.inverse_transform(y_pred_cantidad_scaled.res
 # Obtener la predicción de cantidad
 next_purchase_quantity = y_pred_cantidad[0]
 
-
-# # Hacer las predicciones
-# predicted_cantidad = modelo_cantidad.predict(X_new)[0]
-# predicted_dias = modelo_dias.predict(X_new)[0]
-
-# Invertir el escalado para los días
-# predicted_dias = scaler.inverse_transform([[0, predicted_dias_scaled]])[0][1]  # Suponiendo que los días son la segunda columna
-# predicted_dias = predicted_days
-
 # Calcular la fecha de la siguiente compra
 predicted_next_purchase_date = datetime.strptime(lastPurchasedDate, '%Y-%m-%d') + timedelta(days=int(days_until_next_purchase))
-
-
-
 
 # Devolver los resultados como un diccionario
 result = {
@@ -121,7 +90,5 @@ result = {
     "predicted_dias": days_until_next_purchase,
     "predicted_fecha": predicted_next_purchase_date.strftime('%Y-%m-%d')  # Ajusta esto si necesitas calcularlo
 }
-# print(result)
 
-# Convertir el resultado a JSON y escribirlo en stdout (para ser leído por NestJS)
 print(json.dumps(result))
