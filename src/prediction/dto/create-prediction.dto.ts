@@ -1,10 +1,15 @@
 import { HttpStatus } from "@nestjs/common";
 import { RpcException } from "@nestjs/microservices";
 import { Transform, Type } from "class-transformer";
-import { IsNotEmpty, IsNotEmptyObject, IsNumber, IsObject, IsString, ValidateNested } from "class-validator";
+import { IsNotEmpty, IsNotEmptyObject, IsNumber, IsObject, IsString, IsUUID, ValidateNested } from "class-validator";
 import { DataToAnalyze } from "./data-to-analyze.dto";
 
 export class CreatePredictionDto {
+
+    @IsNotEmpty()
+    @IsString()
+    @IsUUID()
+    public dataAnalyticsId: string;
 
     @IsNotEmpty()
     @IsString()

@@ -85,7 +85,6 @@ predicted_next_purchase_date = datetime.strptime(lastPurchasedDate, '%Y-%m-%d') 
 
 # Devolver los resultados como un diccionario
 result = {
-    "materialID": materialID,
     "predicted_cantidad": next_purchase_quantity,
     "predicted_dias": days_until_next_purchase,
     "predicted_fecha": predicted_next_purchase_date.strftime('%Y-%m-%d')  # Ajusta esto si necesitas calcularlo
