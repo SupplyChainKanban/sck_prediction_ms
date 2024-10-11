@@ -64,7 +64,7 @@ export class PredictionService extends PrismaClient implements OnModuleInit {
       })
       console.log({ predictedQuantity, predictedDays, predictedDate, dataAnalyticsId })
       // Emit order
-      this.emitOrder(id, materialID, predictedQuantity, predictedDate)
+      this.emitOrder(id, materialID, predictedQuantity, predictedDate, dataAnalyticsId)
       return id;
     } catch (error) {
       handleExceptions(error, this.logger)
@@ -84,14 +84,14 @@ export class PredictionService extends PrismaClient implements OnModuleInit {
   }
 
 
-  private emitOrder(id: string, materialID: string, predictedQuantity: number, predictedDate: string) {
+  private emitOrder(id: string, materialID: string, predictedQuantity: number, predictedDate: string, dataAnalyticsId: string) {
     try {
       this.client.emit('createOrder', {
         materialID,
         orderQuantity: predictedQuantity,
         predictedDate: new Date(predictedDate),
         predictionID: id,
-
+        dataAnalyticsId,
       });
     } catch (error) {
       handleExceptions(error, this.logger)
