@@ -15,11 +15,11 @@ datasource db {
 }
 
 enum PredictionStatus {
-  BACKLOG
-  TO_BUY
-  IN_BUYING_PROCESS
-  BOUGHT
-  DISMISSED
+  PENDING
+  CREATION_DONE
+  UPDATED_DONE
+  PROCESS_DONE
+  ERROR
 }
 
 model Prediction {
@@ -32,7 +32,7 @@ model Prediction {
 
   dataAnalyticsId   String
 
-  status          PredictionStatus @default(BACKLOG)
+  status          PredictionStatus @default(PENDING)
   createdAt       DateTime @default(now())
   updateAt        DateTime @updatedAt
 

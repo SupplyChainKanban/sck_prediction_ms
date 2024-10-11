@@ -8,6 +8,8 @@ import { handleExceptions } from 'src/common/helpers';
 import { ClientProxy } from '@nestjs/microservices';
 import { SCK_NATS_SERVICE } from 'src/config';
 import { PrismaClient } from '@prisma/client';
+import { PredictionInterface } from 'src/common/interfaces';
+import { ChangePredictionStatusDto } from './dto/change-prediction-status.dto';
 
 const execPromise = promisify(exec);
 
@@ -24,7 +26,7 @@ export class PredictionService extends PrismaClient implements OnModuleInit {
     this.logger.log('Data Analytics DB connected')
   }
 
-  async runPrediction(createPredictionDto: CreatePredictionDto) {
+  async runPrediction(createPredictionDto: CreatePredictionDto): Promise<PredictionInterface> {
     const { materialID, dataToAnalyze, purchaseInEvent, usageInEvent } = createPredictionDto
     const { totalQuantityUsed, totalQuantityPurchased, avgDailyUsed, avgTimeBetweenPurchases, lastPurchasedDate, usedTrend, daysSinceLastPurchase } = dataToAnalyze
     const pythonScriptPath = join('.', 'src', 'python', 'predict.py');
@@ -32,17 +34,70 @@ export class PredictionService extends PrismaClient implements OnModuleInit {
     try {
       const { stdout, stderr } = await execPromise(`python ${pythonScriptPath} ${materialID} ${totalQuantityUsed} ${totalQuantityPurchased} ${avgDailyUsed} ${avgTimeBetweenPurchases} ${lastPurchasedDate.toString().split('T')[0]} ${usedTrend} ${daysSinceLastPurchase} ${purchaseInEvent} ${usageInEvent}`);
       if (stderr) handleExceptions(stderr, this.logger)
-
-      return stdout;
+      const result = JSON.parse(stdout)
+      return {
+        predictedQuantity: Math.round(+result.predicted_cantidad),
+        predictedDays: Math.round(+result.predicted_dias),
+        predictedDate: result.predicted_fecha,
+      }
     } catch (error) {
       handleExceptions(error, this.logger)
     }
   }
 
   async createPrediction(createPredictionDto: CreatePredictionDto) {
-    const { dataAnalyticsId } = createPredictionDto;
-    const predictionResult = await this.runPrediction(createPredictionDto);
+    const { dataAnalyticsId, materialID } = createPredictionDto;
+    const { predictedQuantity, predictedDays, predictedDate } = await this.runPrediction(createPredictionDto);
 
-    console.log({ predictionResult })
+    try {
+      const { id } = await this.prediction.create({
+        data: {
+          materialID,
+          predictedQuantity,
+          predictedDays,
+          predictedDate: new Date(predictedDate),
+          dataAnalyticsId,
+        },
+        select: {
+          id: true,
+        }
+      })
+      console.log({ predictedQuantity, predictedDays, predictedDate, dataAnalyticsId })
+      // Emit order
+      this.emitOrder(id, materialID, predictedQuantity, predictedDate)
+      return id;
+    } catch (error) {
+      handleExceptions(error, this.logger)
+    }
   }
+
+  async updatePredictionStatus(changePredictionStatusDto: ChangePredictionStatusDto) {
+    const { id, status } = changePredictionStatusDto;
+    try {
+      await this.prediction.update({
+        where: { id },
+        data: { status }
+      })
+    } catch (error) {
+      handleExceptions(error, this.logger);
+    }
+  }
+
+
+  private emitOrder(id: string, materialID: string, predictedQuantity: number, predictedDate: string) {
+    try {
+      this.client.emit('createOrder', {
+        materialID,
+        orderQuantity: predictedQuantity,
+        predictedDate: new Date(predictedDate),
+        predictionID: id,
+
+      });
+    } catch (error) {
+      handleExceptions(error, this.logger)
+    }
+  }
+
+
+
 }

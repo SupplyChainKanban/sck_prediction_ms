@@ -13,7 +13,7 @@ export class CreatePredictionDto {
 
     @IsNotEmpty()
     @IsString()
-    public materialID: number;
+    public materialID: string;
 
     @IsObject()
     @IsNotEmptyObject()
