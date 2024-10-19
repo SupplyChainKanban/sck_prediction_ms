@@ -15,7 +15,7 @@ const execPromise = promisify(exec);
 
 @Injectable()
 export class PredictionService extends PrismaClient implements OnModuleInit {
-  private readonly logger = new Logger('PredictionService');
+  private readonly logger = new Logger(PredictionService.name);
 
   constructor(@Inject(SCK_NATS_SERVICE) private readonly client: ClientProxy) {
     super()
